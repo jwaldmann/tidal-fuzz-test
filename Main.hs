@@ -13,41 +13,55 @@ import System.Random
 import Control.Exception
 import Control.DeepSeq (force)
 import Data.String (fromString)
-import Control.Monad (replicateM,forever,void)
+import Control.Monad (replicateM,forever,void,when)
 import System.IO (hPutStr, hPutStrLn, hFlush, stderr)
+import qualified Data.Map as M
 
 main = do
-  forever $ do
-    
-    n <- randomRIO (1, 10)
-    let char = toEnum <$> randomRIO (0, 127) -- FIXME
-    s <- replicateM n char
+  let go tick errs = do
+        when (0 == mod tick 100000)
+          $ hPutStrLn stderr $ show tick
 
-    (do -- error "wat"
-        evaluate $ force
-         $ C.queryArc (fromString s :: C.Pattern C.ControlMap)
-         $ C.Arc 0 10
-        hPutStr stderr "." 
-     ) `catches`
-      [ Handler $ \ (e :: C.TidalParseError) -> do
-        -- parse errors are tolerated
-        hPutStr stderr "-"
-      , Handler $ \ (e :: ErrorCall) ->    do
-        hPutStrLn stderr $ unlines
-          [ "ErrorCall"
-          , show s
-          , show $ map fromEnum s
-          , show e
+        n <- randomRIO (1, 10)
+        let char = toEnum <$> randomRIO (0, 127) -- FIXME
+        s <- replicateM n char
+
+        merr <- (do 
+            evaluate $ force
+              $ C.queryArc (fromString s :: C.Pattern C.ControlMap)
+              $ C.Arc 0 10
+            -- hPutStr stderr "."
+            return Nothing
+          ) `catches`
+          [ Handler $ \ (e :: C.TidalParseError) -> do
+              -- hPutStr stderr "p"
+              return Nothing
+          , Handler $ \ (e :: SomeException ) -> do
+              -- hPutStr stderr "e"
+              return $ Just e
           ]
-        hFlush stderr
-        error "huh"
-      , Handler $ \ (e :: SomeException ) -> do
-        hPutStrLn stderr $ unlines
-          [ "SomeException"
-          , show s
-          , show $ map fromEnum s
-          , show e
-          ]
-        hFlush stderr
-        error "huh"
-      ]
+        errs <- case merr of
+          Nothing -> return errs
+          Just err -> case M.lookup (show err) errs of
+            Nothing -> do
+              hPutStrLn stderr $ unlines
+                [ "new error"
+                , show err
+                , "for input"
+                , show s
+                , show $ map fromEnum s
+                ]
+              return $ M.insert (show err) s errs
+            Just t | length s < length t -> do
+              hPutStrLn stderr $ unlines
+                [ "old error"
+                , show err
+                , "new (shorter) input"
+                , show s
+                , show $ map fromEnum s
+                ]
+              return $ M.insert (show err) s errs
+            _ -> do
+              return errs
+        go (succ tick) errs
+  go (0 :: Int) M.empty
