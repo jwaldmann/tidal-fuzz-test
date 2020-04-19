@@ -19,10 +19,10 @@ import qualified Data.Map as M
 
 main = do
   let go tick errs = do
-        when (0 == mod tick 100000)
-          $ hPutStrLn stderr $ show tick
+        when (0 == mod tick 1000000)
+          $ hPutStr stderr $ show tick <> " "
 
-        n <- randomRIO (1, 10)
+        n <- randomRIO (1, 100)
         let char = toEnum <$> randomRIO (0, 127) -- FIXME
         s <- replicateM n char
 
@@ -45,8 +45,7 @@ main = do
           Just err -> case M.lookup (show err) errs of
             Nothing -> do
               hPutStrLn stderr $ unlines
-                [ "new error"
-                , show err
+                [ "xxx new error: " <> show err
                 , "for input"
                 , show s
                 , show $ map fromEnum s
@@ -54,8 +53,7 @@ main = do
               return $ M.insert (show err) s errs
             Just t | length s < length t -> do
               hPutStrLn stderr $ unlines
-                [ "old error"
-                , show err
+                [ "xxx old error: " <> show err
                 , "new (shorter) input"
                 , show s
                 , show $ map fromEnum s
