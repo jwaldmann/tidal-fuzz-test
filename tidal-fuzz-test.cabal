@@ -25,3 +25,10 @@ test-suite tidal-tpat-test
   build-depends: tidal-fuzz-test,
     base, tidal, random, deepseq, containers, leancheck
   default-language:    Haskell2010
+
+test-suite tidal-rand-test
+  type: exitcode-stdio-1.0
+  main-is:             Rand.hs
+  build-depends: base, tidal
+  default-language:    Haskell2010
+  
