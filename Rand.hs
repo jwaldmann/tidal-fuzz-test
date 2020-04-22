@@ -14,7 +14,7 @@ main = do
 -- see https://github.com/tidalcycles/Tidal/issues/636
 
 main_for :: Int -> IO ()
-main_for i = print
+main_for i = print -- 
   $ foldr ($) (speed (run 16))
   $ replicate i
   $ sometimes (# speed 0)
