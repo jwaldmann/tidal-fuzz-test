@@ -14,12 +14,23 @@ main = do
 -- see https://github.com/tidalcycles/Tidal/issues/636
 
 main_for :: Int -> IO ()
-main_for i = print -- 
+main_for = main_for_2
+
+-- see https://github.com/tidalcycles/Tidal/issues/636#issuecomment-618433347
+main_for_2 i = print
   $ foldr ($) (speed (run 16))
   $ replicate i
-  $ sometimes (# speed 0)
+  $ _sometimesBy (1/2) (# speed 0)
 
-main_for_1 i = print -- works
+_sometimesBy  :: Double -> (Pattern a -> Pattern a) -> Pattern a -> Pattern a
+_sometimesBy x f p = overlay (_degradeBy x p) (_unDegradeBy x $ f p)
+
+main_for_1 i = print 
   $ foldr ($) (run 16)
   $ replicate i
   $ sometimes (const 0)
+
+main_for_0 i = print 
+  $ foldr ($) (speed (run 16))
+  $ replicate i
+  $ sometimes (# speed 0) 
