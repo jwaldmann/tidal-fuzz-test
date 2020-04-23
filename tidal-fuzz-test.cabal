@@ -31,4 +31,10 @@ test-suite tidal-rand-test
   main-is:             Rand.hs
   build-depends: base, tidal
   default-language:    Haskell2010
+
+test-suite tidal-fix-test
+  type: exitcode-stdio-1.0
+  main-is:             Fix.hs
+  build-depends: base, tidal
+  default-language:    Haskell2010
   
